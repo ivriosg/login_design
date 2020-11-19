@@ -95,7 +95,7 @@ class LoginPage extends StatelessWidget {
             ),
             child: Column(
               children: [
-                Text('Ingreso', style: TextStyle(fontSize: 20.0)),
+                Text('Iniciar', style: TextStyle(fontSize: 20.0)),
                 SizedBox(height: 60.0),
                 _crearEmail(bloc),
                 SizedBox(height: 30.0),
@@ -123,7 +123,7 @@ class LoginPage extends StatelessWidget {
           child: TextField(
             keyboardType: TextInputType.emailAddress,
             decoration: InputDecoration(
-              icon: Icon(Icons.alternate_email, color: Colors.deepPurple),
+              icon: Icon(Icons.email_outlined, color: Colors.deepPurple),
               hintText: 'ejemplo@email.com',
               labelText: 'Email',
               counterText: snapshot.data,
@@ -165,7 +165,7 @@ class LoginPage extends StatelessWidget {
         return RaisedButton(
           child: Container(
             padding: EdgeInsets.symmetric(horizontal: 80.0, vertical: 15.0),
-            child: Text('Ingresar'),
+            child: Text('Iniciar Sesión'),
           ),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(5.0),
@@ -173,9 +173,17 @@ class LoginPage extends StatelessWidget {
           elevation: 0.0,
           color: Colors.deepPurple,
           textColor: Colors.white,
-          onPressed: snapshot.hasData ? () {} : null,
+          onPressed: snapshot.hasData ? () => _login(bloc, context) : null,
         );
       },
     );
+  }
+
+  // Mantener datos del Stream
+  _login(LoginBloc bloc, BuildContext context) {
+    print('Email: ${bloc.email}');
+    print('Password: ${bloc.password}');
+
+    Navigator.pushReplacementNamed(context, 'home');
   }
 }

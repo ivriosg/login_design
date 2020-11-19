@@ -1,9 +1,9 @@
 // Logica para trabajar con el formulario
 
 import 'dart:async';
+import 'package:rxdart/rxdart.dart';
 
 import 'package:formvalidation/src/bloc/validators.dart';
-import 'package:rxdart/rxdart.dart';
 
 class LoginBloc with Validators {
   final _emailController = BehaviorSubject<String>();
@@ -16,17 +16,18 @@ class LoginBloc with Validators {
       _passwordController.stream.transform(validarPassword);
 
   // Unimos las dos validaciones para activar el botón de ingresar
-  //Stream<bool> get formValidStream => Observable.combineLatest2(emailStream, passwordStream, (e, p) => true);
-
   Stream<bool> get formValidStream =>
-      CombineLatestStream(emailStream, passwordStream, (e, p) => true);
+      Rx.combineLatest2(emailStream, passwordStream, (e, p) => true);
 
   // Insertar valores al Stream
   Function(String) get changeEmail => _emailController.sink.add;
   Function(String) get changePassword => _passwordController.sink.add;
 
-  // Cerrar controlador
+  // Obtner el último valor ingresado a los Streams
+  String get email => _emailController.value;
+  String get password => _passwordController.value;
 
+  // Cerrar controlador
   dispose() {
     _emailController?.close();
     _passwordController?.close();
