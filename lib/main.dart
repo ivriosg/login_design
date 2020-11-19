@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:formvalidation/src/bloc/provider.dart';
 import 'package:formvalidation/src/pages/home_page.dart';
 import 'package:formvalidation/src/pages/login_page.dart';
+import 'package:formvalidation/src/pages/producto_page.dart';
 
 void main() => runApp(MyApp());
 
@@ -12,10 +13,11 @@ class MyApp extends StatelessWidget {
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'Material App',
-        initialRoute: 'login',
+        initialRoute: 'home',
         routes: {
           'login': (BuildContext context) => LoginPage(),
           'home': (BuildContext context) => HomePage(),
+          'producto': (BuildContext context) => ProductoPage(),
         },
         // Definimos el color de toda la app
         theme: ThemeData(primaryColor: Colors.deepPurple),
