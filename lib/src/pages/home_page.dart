@@ -1,31 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:formvalidation/src/bloc/provider.dart';
 import 'package:formvalidation/src/models/producto_model.dart';
-import 'package:formvalidation/src/providers/productos_provider.dart';
 
 class HomePage extends StatelessWidget {
-  final productosProvider = new ProductosProvider();
   @override
   Widget build(BuildContext context) {
+    final productosBloc = Provider.productosBloc(context);
+    productosBloc.cargarProductos();
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Home'),
       ),
-      body: _crearListado(),
+      body: _crearListado(productosBloc),
       floatingActionButton: _crearBoton(context),
     );
   }
 
-  _crearBoton(BuildContext context) {
-    return FloatingActionButton(
-      child: Icon(Icons.add),
-      backgroundColor: Colors.deepPurple,
-      onPressed: () => Navigator.pushNamed(context, 'producto'),
-    );
-  }
-
-  _crearListado() {
-    return FutureBuilder(
-      future: productosProvider.cargarProductos(),
+  _crearListado(ProductosBloc productosBloc) {
+    return StreamBuilder(
+      stream: productosBloc.productosStream,
       builder:
           (BuildContext context, AsyncSnapshot<List<ProductoModel>> snapshot) {
         if (snapshot.hasData) {
@@ -33,7 +27,8 @@ class HomePage extends StatelessWidget {
           final productos = snapshot.data;
           return ListView.builder(
             itemCount: productos.length,
-            itemBuilder: (context, i) => _crearItem(context, productos[i]),
+            itemBuilder: (context, i) =>
+                _crearItem(context, productosBloc, productos[i]),
           );
         } else {
           return Center(child: CircularProgressIndicator());
@@ -42,17 +37,15 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  _crearItem(BuildContext context, ProductoModel producto) {
+  _crearItem(BuildContext context, ProductosBloc productosBloc,
+      ProductoModel producto) {
     // Dismissible va a borrar el contenido
     return Dismissible(
       key: UniqueKey(),
       background: Container(
         color: Colors.red,
       ),
-      onDismissed: (direccion) {
-        // Borramos el producto
-        productosProvider.borrarProducto(producto.id);
-      },
+      onDismissed: (direccion) => productosBloc.borrarProducto(producto.id),
       child: Card(
         child: Column(
           children: [
@@ -75,6 +68,14 @@ class HomePage extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  _crearBoton(BuildContext context) {
+    return FloatingActionButton(
+      child: Icon(Icons.add),
+      backgroundColor: Colors.deepPurple,
+      onPressed: () => Navigator.pushNamed(context, 'producto'),
     );
   }
 }

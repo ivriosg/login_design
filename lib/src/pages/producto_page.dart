@@ -1,14 +1,13 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:formvalidation/src/bloc/provider.dart';
 import 'package:image_picker/image_picker.dart';
 
 import 'package:formvalidation/src/utils/utils.dart' as utils;
 import 'package:formvalidation/src/models/producto_model.dart';
-import 'package:formvalidation/src/providers/productos_provider.dart';
 
 class ProductoPage extends StatefulWidget {
-  // Definimos el Form Key
   @override
   _ProductoPageState createState() => _ProductoPageState();
 }
@@ -20,8 +19,7 @@ class _ProductoPageState extends State<ProductoPage> {
   // Key única para dar retroalimentación
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
-  // Provider para manejar la información de los productos
-  final productoProvider = new ProductosProvider();
+  ProductosBloc productosBloc;
   ProductoModel producto = new ProductoModel();
 
   // Evitamos guardar multiples ocasiones el producto
@@ -32,6 +30,7 @@ class _ProductoPageState extends State<ProductoPage> {
 
   @override
   Widget build(BuildContext context) {
+    productosBloc = Provider.productosBloc(context);
     // Verificamos si vamos a editar un producto
     final ProductoModel prodData = ModalRoute.of(context).settings.arguments;
 
@@ -43,7 +42,7 @@ class _ProductoPageState extends State<ProductoPage> {
     return Scaffold(
       key: scaffoldKey,
       appBar: AppBar(
-        title: Text('Producto'),
+        title: Text(producto.titulo),
         actions: [
           IconButton(
             icon: Icon(Icons.photo_size_select_actual),
@@ -83,6 +82,8 @@ class _ProductoPageState extends State<ProductoPage> {
       initialValue: producto.titulo,
       textCapitalization: TextCapitalization.sentences,
       decoration: InputDecoration(labelText: 'Producto'),
+      // Asignamos el texto del usuario al producto
+      onSaved: (value) => producto.titulo = value,
       // Validando la información del usuario
       validator: (value) {
         if (value.length < 3) {
@@ -91,8 +92,6 @@ class _ProductoPageState extends State<ProductoPage> {
           return null;
         }
       },
-      // Asignamos el texto del usuario al producto
-      onSaved: (value) => producto.titulo = value,
     );
   }
 
@@ -102,6 +101,8 @@ class _ProductoPageState extends State<ProductoPage> {
       initialValue: producto.valor.toString(),
       keyboardType: TextInputType.numberWithOptions(decimal: true),
       decoration: InputDecoration(labelText: 'Precio'),
+      // Asignamos el texto del usuario al producto
+      onSaved: (value) => producto.valor = double.parse(value),
       // Validando el precio
       validator: (value) {
         // Obtenemos la validación del archivo utils
@@ -111,8 +112,17 @@ class _ProductoPageState extends State<ProductoPage> {
           return 'Sólo números';
         }
       },
-      // Asignamos el texto del usuario al producto
-      onSaved: (value) => producto.valor = double.parse(value),
+    );
+  }
+
+  _crearDisponible() {
+    return SwitchListTile(
+      value: producto.disponible,
+      title: Text('Disponible'),
+      activeColor: Colors.deepPurple,
+      onChanged: (value) => setState(() {
+        producto.disponible = value;
+      }),
     );
   }
 
@@ -129,34 +139,6 @@ class _ProductoPageState extends State<ProductoPage> {
       // Validamos que el producto no se guarde multiples ocasiones
       onPressed: (_guardando) ? null : _submit,
     );
-  }
-
-  _crearDisponible() {
-    return SwitchListTile(
-      value: producto.disponible,
-      title: Text('Disponible'),
-      activeColor: Colors.deepPurple,
-      onChanged: (value) => setState(() {
-        producto.disponible = value;
-      }),
-    );
-  }
-
-  _mostrarFoto() {
-    if (producto.fotoUrl != null) {
-      return FadeInImage(
-        image: NetworkImage(producto.fotoUrl),
-        placeholder: AssetImage('assets/jar-loading.gif'),
-        height: 300.0,
-        fit: BoxFit.contain,
-      );
-    } else {
-      return Image(
-        image: AssetImage(foto?.path ?? 'assets/no-image.png'),
-        height: 300.0,
-        fit: BoxFit.cover,
-      );
-    }
   }
 
   _seleccionarFoto() async {
@@ -198,20 +180,14 @@ class _ProductoPageState extends State<ProductoPage> {
     // Verificamos que la imagen se suba
     if (foto != null) {
       // Guardamos foto en Firebase
-      producto.fotoUrl = await productoProvider.subirImagen(foto);
+      producto.fotoUrl = await productosBloc.subirFoto(foto);
     }
 
     if (producto.id == null) {
-      productoProvider.crearProducto(producto);
+      productosBloc.agregarProducto(producto);
     } else {
-      productoProvider.editarProducto(producto);
+      productosBloc.editarProducto(producto);
     }
-
-    // Actualizamos el valor para no guardar el mismo producto
-    setState(() {
-      _guardando = false;
-    });
-
     _mostrarSnackbar('Producto Guardado');
 
     // Redireccionamos al usuario a la pagina principal
@@ -225,5 +201,22 @@ class _ProductoPageState extends State<ProductoPage> {
     );
 
     scaffoldKey.currentState.showSnackBar(snackbar);
+  }
+
+  _mostrarFoto() {
+    if (producto.fotoUrl != null) {
+      return FadeInImage(
+        image: NetworkImage(producto.fotoUrl),
+        placeholder: AssetImage('assets/jar-loading.gif'),
+        height: 300.0,
+        fit: BoxFit.contain,
+      );
+    } else {
+      return Image(
+        image: AssetImage(foto?.path ?? 'assets/no-image.png'),
+        height: 300.0,
+        fit: BoxFit.cover,
+      );
+    }
   }
 }

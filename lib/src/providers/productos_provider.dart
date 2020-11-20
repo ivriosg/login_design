@@ -53,6 +53,9 @@ class ProductosProvider {
     // Verificamos que contenga información el json
     if (decodedData == null) return [];
 
+    // Verificamos si el token de la sesión ya expiro
+    if (decodedData['error'] != null) return [];
+
     decodedData.forEach((id, prod) {
       final prodTemp = ProductoModel.fromJson(prod);
       prodTemp.id = id;
